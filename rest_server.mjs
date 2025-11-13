@@ -59,8 +59,16 @@ function dbRun(query, params) {
 // GET request handler for crime codes
 app.get('/codes', (req, res) => {
     console.log(req.query); // query object (key-value pairs after the ? in the url)
-    
-    res.status(200).type('json').send({}); // <-- you will need to change this
+    let sql = `SELECT * FROM Codes
+                ORDER BY code desc`
+    db.all(sql, [], (err, rows) => {
+    if (err) {
+      res.status(500).type('txt').send('SQL Error');
+    }
+    else {
+        res.status(200).json(rows);
+        }
+    });
 });
 
 // GET request handler for neighborhoods
@@ -77,18 +85,67 @@ app.get('/incidents', (req, res) => {
     res.status(200).type('json').send({}); // <-- you will need to change this
 });
 
+
 // PUT request handler for new crime incident
 app.put('/new-incident', (req, res) => {
     console.log(req.body); // uploaded data
-    
-    res.status(200).type('txt').send('OK'); // <-- you may need to change this
+    const {
+        case_number,
+        date_time,
+        code,
+        incident,
+        police_grid,
+        neighborhood_number,
+        block
+    } = req.body;
+
+    let sql = `SELECT case_number FROM Incidents
+                            WHERE case_number = ?`
+    db.all(sql, [case_number], (err, rows) => {
+    if (err) {
+      res.status(500).type('txt').send('SQL Error');
+    }
+    else {
+        if (rows.length > 0) { 
+            res.status(500).type('txt').send('error: ID already exists');
+        } 
+            else {
+                let incident_data = dbRun(`INSERT INTO Incidents
+                                (case_number, date_time, code, 
+                                incident, police_grid, neighborhood_number, block)
+                                VALUES(?,?,?,?,?,?,?)`,
+                                [case_number, date_time, code, 
+                                incident, police_grid, neighborhood_number, block]);
+                res.status(200).type('txt').send('success');
+            }
+        }
+    });
 });
 
 // DELETE request handler for new crime incident
 app.delete('/remove-incident', (req, res) => {
     console.log(req.body); // uploaded data
-    
-    res.status(200).type('txt').send('OK'); // <-- you may need to change this
+    const case_number = req.query.case_number;
+
+    let sql = `SELECT case_number FROM Incidents
+                            WHERE case_number = ?`
+    db.all(sql, [case_number], (err, rows) => {
+    if (err) {
+      res.status(500).type('txt').send('SQL Error');
+    }
+    else {
+        if (rows.length === 0) { 
+            let incident_data = dbRun(`DELETE FROM Incidents
+                                WHERE case_number = ?`,
+                                [case_number]);
+                res.status(200).type('txt').send('success');
+        } 
+            else {
+                res.status(500).type('txt').send('error: Case number does not exist');
+            
+            }
+        }
+    });
 });
 
 /********************************************************************
