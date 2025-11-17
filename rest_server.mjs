@@ -59,14 +59,22 @@ function dbRun(query, params) {
 // GET request handler for crime codes
 app.get('/codes', (req, res) => {
     console.log(req.query); // query object (key-value pairs after the ? in the url)
-    let sql = `SELECT * FROM Codes
-                ORDER BY code desc`
-    db.all(sql, [], (err, rows) => {
+    let sql = `SELECT code, incident_type AS type FROM Codes`;
+    var codes = [];
+
+    if('code' in req.query){
+        codes = req.query.code.split(",").map(s => parseInt(s, 10));
+        sql += ` WHERE code IN (${codes.map(() => "?").join(", ")})`;
+    }
+
+    sql += ' ORDER BY code desc';
+    
+    db.all(sql, codes, (err, rows) => {
     if (err) {
       res.status(500).type('txt').send('SQL Error');
     }
     else {
-        res.status(200).json(rows);
+        res.status(200).type('json').send(JSON.stringify({ rows }, null, 4));
         }
     });
 });
@@ -74,8 +82,27 @@ app.get('/codes', (req, res) => {
 // GET request handler for neighborhoods
 app.get('/neighborhoods', (req, res) => {
     console.log(req.query); // query object (key-value pairs after the ? in the url)
-    
-    res.status(200).type('json').send({}); // <-- you will need to change this
+    let sql = 'SELECT neighborhood_number AS id, neighborhood_name AS name FROM Neighborhoods'
+    var ids = [];
+
+    // If id param used
+    if('id' in req.query){
+        ids = req.query.id.split(",").map(s => parseInt(s, 10)); //converting string to int list
+        const placeholders = ids.map(() => "?").join(", ");
+        sql += ` WHERE neighborhood_number IN (${placeholders})`;
+    }
+
+    sql += ' ORDER BY neighborhood_number ASC'; //Ordered
+
+    db.all(sql, ids, (err, rows) => {
+        if (err) {
+        res.status(500).type('txt').send('SQL Error');
+        }
+        else {
+            res.status(200).type('json').send(JSON.stringify({ rows }, null, 4)); 
+        }
+    });
+
 });
 
 // GET request handler for crime incidents
