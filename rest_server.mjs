@@ -179,19 +179,21 @@ app.get('/incidents', (req, res) => {
 });
 
 
-
 // PUT request handler for new crime incident
 app.put('/new-incident', (req, res) => {
     console.log(req.body); // uploaded data
     const {
         case_number,
-        date_time,
+        date,
+        time,
         code,
         incident,
         police_grid,
         neighborhood_number,
         block
     } = req.body;
+
+    const date_time = `${date} ${time}`;
 
     let sql = `SELECT case_number FROM Incidents
                             WHERE case_number = ?`
@@ -229,14 +231,13 @@ app.delete('/remove-incident', (req, res) => {
     }
     else {
         if (rows.length === 0) { 
-            let incident_data = dbRun(`DELETE FROM Incidents
+            res.status(500).type('txt').send('error: Case number does not exist');
+        } 
+        else {
+                let incident_data = dbRun(`DELETE FROM Incidents
                                 WHERE case_number = ?`,
                                 [case_number]);
                 res.status(200).type('txt').send('success');
-        } 
-            else {
-                res.status(500).type('txt').send('error: Case number does not exist');
-            
             }
         }
     });
