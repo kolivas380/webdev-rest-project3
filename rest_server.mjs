@@ -108,9 +108,76 @@ app.get('/neighborhoods', (req, res) => {
 // GET request handler for crime incidents
 app.get('/incidents', (req, res) => {
     console.log(req.query); // query object (key-value pairs after the ? in the url)
-    
-    res.status(200).type('json').send({}); // <-- you will need to change this
+    const {neighborhood, code, start_date, end_date, grid, limit} = req.query;
+
+    let sql = `SELECT 
+                    case_number,
+                    date(date_time) AS date,
+                    time(date_time) AS time,
+                    code,
+                    incident,
+                    police_grid,
+                    neighborhood_number,
+                    block,
+                    date_time
+                FROM Incidents
+                WHERE 1=1`;
+    let params = [];
+
+    if (neighborhood) {
+        sql += ` AND neighborhood_number = ?`;
+        params.push(neighborhood);
+    }
+    if (code) {
+        sql += ` AND code = ?`;
+        params.push(code);
+    }
+    if (grid) {
+        sql += ` AND police_grid = ?`;
+        params.push(grid);
+    }
+
+    if (start_date && end_date) {
+        sql += ` AND date_time BETWEEN ? AND ?`;
+        params.push(start_date + " 00:00:00", end_date + " 23:59:59");
+    } else if (start_date) {
+        sql += ` AND date_time >= ?`;
+        params.push(start_date + " 00:00:00");
+    } else if (end_date) {
+        sql += ` AND date_time <= ?`;
+        params.push(end_date + " 23:59:59");
+    }
+
+    let max = 1000;
+    if (limit) {
+        let n = parseInt(limit, 10);
+        if (!isNaN(n) && n > 0) max = n;
+    }
+
+    sql += ` ORDER BY date_time DESC LIMIT ?`;
+    params.push(max);
+
+    db.all(sql, params, (err, rows) => {
+        if (err) {
+            res.status(500).type('txt').send('SQL Error');
+        }
+        else {
+            let cleaned = rows.map(r => ({
+                case_number: r.case_number,
+                date: r.date,
+                time: r.time,
+                code: r.code,
+                incident: r.incident,
+                police_grid: r.police_grid,
+                neighborhood_number: r.neighborhood_number,
+                block: r.block
+            }));
+
+            res.status(200).json(cleaned);
+        }
+    });
 });
+
 
 
 // PUT request handler for new crime incident
