@@ -125,26 +125,29 @@ app.get('/incidents', (req, res) => {
     let params = [];
 
     if (neighborhood) {
-        sql += ` AND neighborhood_number = ?`;
-        params.push(neighborhood);
+        let n = req.query.neighborhood.split(",").map(s => parseInt(s, 10)); //converting string to int list
+        const placeholders = n.map(() => "?").join(", ");
+        sql += ` AND neighborhood_number IN (${placeholders})`;
+        params.push(...n);
     }
     if (code) {
-        sql += ` AND code = ?`;
-        params.push(code);
+        const c = code.split(",").map(x => parseInt(x, 10));
+        const placeholders = c.map(() => "?").join(", ");
+        sql += ` AND code IN (${placeholders})`;
+        params.push(...c);
     }
     if (grid) {
-        sql += ` AND police_grid = ?`;
-        params.push(grid);
+        const g = grid.split(",").map(x => parseInt(x, 10));
+        const placeholders = g.map(() => "?").join(", ");
+        sql += ` AND police_grid IN (${placeholders})`;
+        params.push(...g);
     }
-
-    if (start_date && end_date) {
-        sql += ` AND date_time BETWEEN ? AND ?`;
-        params.push(start_date + " 00:00:00", end_date + " 23:59:59");
-    } else if (start_date) {
+    if (start_date) {
         sql += ` AND date_time >= ?`;
         params.push(start_date + " 00:00:00");
-    } else if (end_date) {
-        sql += ` AND date_time <= ?`;
+    } 
+    if (end_date) {
+        sql += ` AND date(date_time) < date(?, '+1 day')`;
         params.push(end_date + " 23:59:59");
     }
 
