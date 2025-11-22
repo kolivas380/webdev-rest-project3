@@ -3,10 +3,19 @@
     "description": "REST Server",
     "version": "1.0.0",
     "author": {
-        "name": "",
-        "email": ""
+        "name": "Kayla Olivas",
+        "email": "oliv1819@stthomas.edu"
     },
-    "contributors": [],
+    "contributors": [
+        {
+            "name": "Kristina Hildebrandt",
+            "email": "hild7441@stthomas.edu"
+        },
+        {
+            "name": "Iqra Mohamed",
+            "email": "moha9971@stthomas.edu"
+        }
+    ],
     "repository": {},
     "dependencies": {
         "express": "^4.21.2",
