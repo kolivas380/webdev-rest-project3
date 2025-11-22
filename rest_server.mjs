@@ -74,7 +74,7 @@ app.get('/codes', (req, res) => {
       res.status(500).type('txt').send('SQL Error');
     }
     else {
-        res.status(200).type('json').send(JSON.stringify({ rows }, null, 4));
+        res.status(200).type('json').send(JSON.stringify(rows, null, 4));
         }
     });
 });
@@ -99,7 +99,7 @@ app.get('/neighborhoods', (req, res) => {
         res.status(500).type('txt').send('SQL Error');
         }
         else {
-            res.status(200).type('json').send(JSON.stringify({ rows }, null, 4)); 
+            res.status(200).type('json').send(JSON.stringify( rows, null, 4)); 
         }
     });
 
@@ -173,7 +173,7 @@ app.get('/incidents', (req, res) => {
                 block: r.block
             }));
 
-            res.status(200).json(cleaned);
+            res.status(200).type('json').send(JSON.stringify( cleaned, null, 4));
         }
     });
 });
